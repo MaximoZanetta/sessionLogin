@@ -6,7 +6,7 @@ const mongoose = require('mongoose')
 require('dotenv').config()
 const passport = require('passport')
 const session = require('express-session')
-
+const { fork } = require('child_process')
 
 
 require('./middlewares/passport')
@@ -28,6 +28,21 @@ app.set('view engine', 'ejs')
 
 //routes
 app.use(require('./routes/users.routes'))
+
+//ruta info
+app.get('/info', (req, res) => {
+    res.json({sistemaOperativo: process.platform, versionNode: process.version, memoriaTotal: process.memoryUsage(), idProceso: process.pid, carpetaDelProyecto: process.cwd(), tituloDelProceso: process.title})
+})
+
+
+//ruta random
+app.get('/random', (req, res) => {
+    console.log(req.query);
+    const computo = fork('./calculateRandom.js')
+    computo.on('message', (data) => {
+        res.json({resltado: data})
+    })
+})
 mongoose.set('strictQuery', true)
 mongoose.connect(process.env.DB_MONGO_URI).then(()=> console.log('database connected')).catch((err)=> console.log(err))
 app.listen(PORT, ()=> {
